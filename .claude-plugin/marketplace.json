@@ -1,0 +1,18 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "claude-lint",
+  "owner": {
+    "name": "Alexey Kolesnikov",
+    "url": "https://github.com/Conte777"
+  },
+  "description": "Formatters and linters that run on every edit Claude Code makes, reported as one collapsible line.",
+  "plugins": [
+    {
+      "name": "lint",
+      "source": "./plugins/lint",
+      "description": "Runs the formatter and linter of the edited file's language after every Edit and Write, hands the findings to the model and draws them as one line that ctrl+o expands.",
+      "category": "productivity",
+      "keywords": ["lint", "format", "golangci-lint", "ruff", "gofmt"]
+    }
+  ]
+}

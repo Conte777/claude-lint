@@ -1,0 +1,10 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "lint",
+  "version": "0.1.0",
+  "description": "Formats and lints every file Claude Code edits, reported as one collapsible line.",
+  "author": {
+    "name": "Alexey Kolesnikov",
+    "email": "kolesnikov@itcrew.info"
+  }
+}
