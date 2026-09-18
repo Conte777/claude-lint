@@ -216,18 +216,6 @@ const runChecks = async ($: EngineInterface, filePath: string): Promise<Report |
   return { count: issues.length, file: baseName(filePath), detail }
 }
 
-const REPORT_LIMIT = 200
-
-const reports = new Map<string, Report>()
-
-const remember = (toolUseId: string, report: Report): void => {
-  if (reports.size >= REPORT_LIMIT) {
-    const oldest = reports.keys().next()
-    if (oldest.done !== true) reports.delete(oldest.value)
-  }
-  reports.set(toolUseId, report)
-}
-
 const recordTouched = async ($: EngineInterface, filePath: string): Promise<void> => {
   const home = await $.env.get("HOME")
   if (home === undefined) return
@@ -240,24 +228,14 @@ const recordTouched = async ($: EngineInterface, filePath: string): Promise<void
   await $.fs.write(path, `${previous}${filePath}\n`)
 }
 
-const onFileTool = async (
-  $: EngineInterface,
-  filePath: string,
-  toolUseId: string | undefined,
-): Promise<string | null> => {
+const onFileTool = async ($: EngineInterface, filePath: string): Promise<string | null> => {
   await recordTouched($, filePath)
 
   const report = await runChecks($, filePath)
   if (report === null) return null
 
-  if (toolUseId === undefined) {
-    $.ui.log(`${report.count} issues in ${report.file}, no tool_use_id to draw them on`, { to: "debug" })
-    return report.detail
-  }
-
-  remember(toolUseId, report)
-  $.ui.invalidate("ui.render")
-  $.ui.log(`${report.count} issues in ${report.file}, redraw asked for ${toolUseId}`, { to: "debug" })
+  const plural = report.count === 1 ? "" : "s"
+  $.ui.log(`${report.count} lint issue${plural} in ${report.file}`)
   return report.detail
 }
 
@@ -266,7 +244,7 @@ export const register: Register = (on) => {
     const result = await next(e)
     if ("deny" in result || result.isError === true) return result
 
-    const detail = await onFileTool($, e.file_path, e.tool_use_id)
+    const detail = await onFileTool($, e.file_path)
     if (detail === null) return result
 
     return { ...result, context: [...(result.context ?? []), detail] }
@@ -276,26 +254,9 @@ export const register: Register = (on) => {
     const result = await next(e)
     if ("deny" in result || result.isError === true) return result
 
-    const detail = await onFileTool($, e.file_path, e.tool_use_id)
+    const detail = await onFileTool($, e.file_path)
     if (detail === null) return result
 
     return { ...result, context: [...(result.context ?? []), detail] }
-  })
-
-  on("ui.render", { component: "ToolUse" }, async ($, e, next) => {
-    const drawn = await next(e)
-    const report = reports.get(e.props.tool_use_id)
-    if (report === undefined) return drawn
-
-    const { Box, Text } = $.ui.resolve(e)
-    const plural = report.count === 1 ? "" : "s"
-
-    return Box({
-      flexDirection: "column",
-      children: [
-        drawn,
-        Text({ dimColor: true, children: `${report.count} lint issue${plural} in ${report.file}` }),
-      ],
-    })
   })
 }
