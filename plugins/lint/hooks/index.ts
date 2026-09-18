@@ -103,8 +103,13 @@ const goIssues = async ($: EngineInterface, filePath: string): Promise<string[]>
 
   return issues.map((raw) => {
     const issue = raw as { Text?: string; FromLinter?: string; Pos?: { Filename?: string; Line?: number; Column?: number } }
-    const where = `${baseName(issue.Pos?.Filename ?? filePath)}:${issue.Pos?.Line ?? 0}:${issue.Pos?.Column ?? 0}`
-    return `${where}: ${(issue.Text ?? "").trim()} (${issue.FromLinter ?? "golangci-lint"})`
+    const parts = (issue.Text ?? "").split("\n").map((part) => part.trim()).filter((part) => part !== "")
+    const text = (parts[parts.length - 1] ?? "").replace(/^:\s*/, "").replace(/^\.\//, "")
+    const line = issue.Pos?.Line ?? 0
+    const where = line === 0 || POSITION.test(text)
+      ? ""
+      : `${baseName(issue.Pos?.Filename ?? filePath)}:${line}:${issue.Pos?.Column ?? 0}: `
+    return `${where}${text} (${issue.FromLinter ?? "golangci-lint"})`
   })
 }
 
@@ -245,7 +250,14 @@ const onFileTool = async (
   const report = await runChecks($, filePath)
   if (report === null) return null
 
-  if (toolUseId !== undefined) remember(toolUseId, report)
+  if (toolUseId === undefined) {
+    $.ui.log(`${report.count} issues in ${report.file}, no tool_use_id to draw them on`, { to: "debug" })
+    return report.detail
+  }
+
+  remember(toolUseId, report)
+  $.ui.invalidate("ui.render")
+  $.ui.log(`${report.count} issues in ${report.file}, redraw asked for ${toolUseId}`, { to: "debug" })
   return report.detail
 }
 
