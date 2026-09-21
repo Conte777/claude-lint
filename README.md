@@ -17,20 +17,23 @@ next change:
 
 Every language listed in `CODE_EXTENSIONS` additionally gets a check on the
 comments the session added: comments that restate the code, section-divider
-banners, and blocks of five or more comment lines.
+banners, and blocks of five or more consecutive comment lines. A comment that
+gives a reason — `because`, `so that`, `to avoid`, or anything after a colon —
+is left alone.
 
 A tool that is not on `PATH` is skipped, and its language with it.
 
+Every finding reads `<path>:<line>:<column>: <what>`, the path relative to the
+session's working directory, whichever tool found it.
+
 When nothing is wrong, nothing is said — not to the person, not to the model.
 Reformatting a file is silent too. When there are findings, the model receives
-the full text as tool-result context and the transcript row gets one line:
+the full text as tool-result context and the call's result row is one line,
+drawn in place of what the tool would otherwise report:
 
 ```
-2 lint issues in service.go
+2 lint issues in internal/api/service.go
 ```
-
-Each edited file's path is appended to `~/.claude/.lint-sessions/<session_id>`,
-which a `Stop` hook can read to lint only what the session actually touched.
 
 ## Requirements
 
