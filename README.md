@@ -28,12 +28,15 @@ session's working directory, whichever tool found it.
 
 When nothing is wrong, nothing is said — not to the person, not to the model.
 Reformatting a file is silent too. When there are findings, the model receives
-the full text as tool-result context and the call's result row is one line,
-drawn in place of what the tool would otherwise report:
+the full text as tool-result context. A folded run of calls gets one line under
+it with the count:
 
 ```
-2 lint issues in internal/api/service.go
+2 lint issues in internal/api/service.go (ctrl+o to expand)
 ```
+
+In the ctrl+o transcript each call's result row shows that count and the
+findings themselves, in place of what the tool would otherwise report.
 
 ## Requirements
 

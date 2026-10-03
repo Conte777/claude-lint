@@ -18,6 +18,8 @@ const CODE_EXTENSIONS = new Set([
 
 const REPORT_LIMIT = 64
 
+const TEXT_LIMIT = 10000
+
 const POSITION = /^(.+?):(\d+):(\d+):\s(.*)$/
 
 const HUNK = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/
@@ -324,8 +326,11 @@ export const register: Register = (on) => {
 
     const { Box, Text } = $.ui.resolve(e)
     return (
-      <Box marginLeft={2}>
+      <Box flexDirection="column" marginLeft={2}>
         <Text dimColor>{`⎿  ${summary(report.count, report.name)}`}</Text>
+        <Box marginLeft={3}>
+          <Text dimColor>{report.detail.slice(0, TEXT_LIMIT)}</Text>
+        </Box>
       </Box>
     )
   })
@@ -346,7 +351,7 @@ export const register: Register = (on) => {
       <Box flexDirection="column">
         {drawn}
         <Box marginLeft={2}>
-          <Text dimColor>{`⎿  ${summary(count, where)}`}</Text>
+          <Text dimColor>{`⎿  ${summary(count, where)} (ctrl+o to expand)`}</Text>
         </Box>
       </Box>
     )
