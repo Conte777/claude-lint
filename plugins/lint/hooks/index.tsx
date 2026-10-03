@@ -268,6 +268,9 @@ const runChecks = async (
 
 const reports = new Map<string, Report>()
 
+const summary = (count: number, where: string): string =>
+  `${count} lint issue${count === 1 ? "" : "s"} in ${where}`
+
 const remember = (toolUseId: string, report: Report): void => {
   reports.set(toolUseId, report)
   while (reports.size > REPORT_LIMIT) {
@@ -320,10 +323,31 @@ export const register: Register = (on) => {
     if (report === undefined) return next(e)
 
     const { Box, Text } = $.ui.resolve(e)
-    const plural = report.count === 1 ? "" : "s"
     return (
       <Box marginLeft={2}>
-        <Text dimColor>{`⎿  ${report.count} lint issue${plural} in ${report.name}`}</Text>
+        <Text dimColor>{`⎿  ${summary(report.count, report.name)}`}</Text>
+      </Box>
+    )
+  })
+
+  on("ui.render", { component: "ToolGroup" }, async ($, e, next) => {
+    const found = e.props.calls
+      .map((call) => (call.tool_use_id === undefined ? undefined : reports.get(call.tool_use_id)))
+      .filter((report): report is Report => report !== undefined)
+    if (found.length === 0) return next(e)
+
+    const count = found.reduce((total, report) => total + report.count, 0)
+    const names = new Set(found.map((report) => report.name))
+    const where = names.size === 1 ? (found[0]?.name ?? "") : `${names.size} files`
+
+    const { Box, Text } = $.ui.resolve(e)
+    const drawn = await next(e)
+    return (
+      <Box flexDirection="column">
+        {drawn}
+        <Box marginLeft={2}>
+          <Text dimColor>{`⎿  ${summary(count, where)}`}</Text>
+        </Box>
       </Box>
     )
   })

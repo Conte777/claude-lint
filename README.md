@@ -61,8 +61,9 @@ claude plugin validate plugins/lint       # what the module hooks and calls
 ```
 
 The plugin is typed against the declarations of the Claude Code build it runs
-on, which are generated rather than committed. Regenerate them after an update:
+on, which Claude Code writes into `.claude-plugin/types/` each time it loads the
+plugin with `--plugin-dir`. Regenerate them after an update:
 
 ```sh
-cd plugins/lint && claude -p "/plugin-types .claude/types" && tsc -p tsconfig.json
+cd plugins/lint && claude -p "/cost" --plugin-dir . && tsc -p tsconfig.json
 ```
